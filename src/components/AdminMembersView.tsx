@@ -231,6 +231,17 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
                 <span>Auto-Attendance: Logged Today</span>
               </div>
 
+              {isAdmin && onOpenCreateTaskForMember && (
+                <button
+                  type="button"
+                  onClick={() => onOpenCreateTaskForMember(selectedMember.id)}
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 px-3.5 py-1 rounded-xl shadow-md shadow-pink-600/30 cursor-pointer transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Assign New Task</span>
+                </button>
+              )}
+
               {onOpenChangePicture && (
                 <button
                   type="button"

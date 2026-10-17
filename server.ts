@@ -524,20 +524,38 @@ app.get('/api/attendance', (req: Request, res: Response) => {
   res.json({ success: true, count: records.length, records });
 });
 
-// Get Tasks for Gantt Chart
+// Get Tasks for Gantt Chart (evaluates 1-day testing expiry rule)
 app.get('/api/tasks', (_req: Request, res: Response) => {
+  const now = Date.now();
+  let changed = false;
+  db.tasks.forEach(t => {
+    if (t.testingExpiresAt && t.status !== 'Completed') {
+      const expiresMs = new Date(t.testingExpiresAt).getTime();
+      if (now > expiresMs && t.status !== 'Expired') {
+        t.status = 'Expired';
+        t.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    }
+  });
+  if (changed) {
+    saveDb();
+  }
   res.json({ success: true, tasks: db.tasks });
 });
 
 // Create New Task (Admin Task Registry)
 app.post('/api/tasks', (req: Request, res: Response) => {
-  const { name, modulePhase, description, startDate, dueDate, priority, assigneeIds } = req.body;
+  const { name, modulePhase, description, startDate, dueDate, priority, assigneeIds, testingExpiresAt } = req.body;
 
   if (!name || !startDate || !dueDate) {
     return res.status(400).json({ success: false, message: 'Missing required task details.' });
   }
 
   const nextNumber = db.tasks.length + 1;
+  const calculatedTestingExpiresAt =
+    testingExpiresAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
   const newTask: TaskItem = {
     id: `task-${Date.now()}`,
     taskNumber: nextNumber,
@@ -547,6 +565,7 @@ app.post('/api/tasks', (req: Request, res: Response) => {
     description: description || 'Capstone development phase requirement.',
     startDate,
     dueDate,
+    testingExpiresAt: calculatedTestingExpiresAt,
     status: 'Not Started',
     progress: 0,
     priority: priority || 'Medium',
@@ -570,7 +589,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
     return res.status(404).json({ success: false, message: 'Task not found' });
   }
 
-  const { status, progress, priority, assigneeIds, description, name, startDate, dueDate } = req.body;
+  const { status, progress, priority, assigneeIds, description, name, startDate, dueDate, testingExpiresAt } = req.body;
 
   if (status !== undefined) task.status = status;
   if (progress !== undefined) task.progress = Number(progress);
@@ -580,6 +599,7 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   if (name !== undefined) task.name = name;
   if (startDate !== undefined) task.startDate = startDate;
   if (dueDate !== undefined) task.dueDate = dueDate;
+  if (testingExpiresAt !== undefined) task.testingExpiresAt = testingExpiresAt;
 
   task.updatedAt = new Date().toISOString();
   saveDb();

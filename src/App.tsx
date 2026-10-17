@@ -79,7 +79,7 @@ export default function App() {
     }, 5500);
   };
 
-  // Load database from localStorage
+  // Load database and sync across devices in real time
   const loadData = useCallback(async () => {
     try {
       const [u, t, s, a, b, r] = await Promise.all([
@@ -96,14 +96,47 @@ export default function App() {
       setAttendanceRecords(a);
       setBacklogMatrix(b);
       setEfficiencyRanking(r);
+
+      // Keep active user's avatar & profile in sync if changed on another device!
+      setCurrentUser(prevUser => {
+        if (!prevUser) return null;
+        const fresh = u.find(user => user.id === prevUser.id);
+        if (fresh && (fresh.avatar !== prevUser.avatar || fresh.name !== prevUser.name)) {
+          return { ...prevUser, avatar: fresh.avatar, name: fresh.name };
+        }
+        return prevUser;
+      });
     } catch (err) {
       console.error('Error loading data:', err);
     }
   }, []);
 
-  // Initial load
+  // Real-time synchronization across devices (every 3 seconds and on window focus / visibility change)
   useEffect(() => {
     loadData();
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 3000);
+
+    const handleFocus = () => {
+      loadData();
+    };
+
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [loadData]);
 
   // Handle Login with userId

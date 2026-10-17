@@ -279,19 +279,21 @@ export const apiService = {
   // Get Tasks with 1-day testing expiry evaluation (synced with server across devices)
   async getTasks(): Promise<TaskItem[]> {
     let tasks: TaskItem[] = [];
+    let serverSuccess = false;
     try {
       const res = await fetch('/api/tasks');
       if (res.ok) {
         const data = await res.json();
-        if (data.success && Array.isArray(data.tasks) && data.tasks.length > 0) {
+        if (data.success && Array.isArray(data.tasks)) {
           tasks = data.tasks;
+          serverSuccess = true;
         }
       }
     } catch {
       // offline fallback
     }
 
-    if (tasks.length === 0) {
+    if (!serverSuccess) {
       const local = localStorage.getItem(STORAGE_TASKS);
       tasks = local ? JSON.parse(local) : INITIAL_TASKS;
     }
