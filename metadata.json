@@ -1,0 +1,6 @@
+{
+  "name": "Capstone Gantt Chart & Task Management System",
+  "description": "Comprehensive project phase tracking, interactive Gantt chart, daily auto-attendance, task backlog matrix, and quality audit hub for Capstone development teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
