@@ -22,7 +22,6 @@ interface IndexPortalViewProps {
   onLogin: (userId: string) => Promise<void>;
   onLoginWithCredentials?: (username: string, pass: string) => Promise<void>;
   currentUser: UserAccount | null;
-  onEnterDashboard: () => void;
 }
 
 export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
@@ -30,7 +29,6 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
   onLogin,
   onLoginWithCredentials,
   currentUser,
-  onEnterDashboard,
 }) => {
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -89,19 +87,10 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
             </div>
           </div>
 
-          {currentUser ? (
-            <button
-              onClick={onEnterDashboard}
-              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-600/30 transition cursor-pointer"
-            >
-              <span>Enter System Dashboard</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <span className="text-xs text-pink-400 font-mono">
-              Auto-Attendance Verification Ready
-            </span>
-          )}
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-zinc-950 border border-pink-900/50 text-pink-400 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+            <span>Authentication Required • Auto-Attendance Ready</span>
+          </div>
         </div>
       </nav>
 

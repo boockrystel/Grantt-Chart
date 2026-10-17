@@ -104,12 +104,6 @@ export default function App() {
   // Initial load
   useEffect(() => {
     loadData();
-    // Default to Project Leader if no active session
-    if (!currentUser) {
-      const defaultUser = PRECONFIGURED_USERS[0];
-      apiService.setActiveUser(defaultUser);
-      setCurrentUser(defaultUser);
-    }
   }, [loadData]);
 
   // Handle Login with userId
@@ -257,15 +251,21 @@ export default function App() {
     ? attendanceRecords.find(a => a.userId === currentUser.id && a.date === todayStr) || null
     : null;
 
-  // If on the Index Portal page
-  if (showIndexPortal) {
+  const handleLogoutToIndex = () => {
+    apiService.setActiveUser(null);
+    setCurrentUser(null);
+    setShowIndexPortal(true);
+    triggerToast('👋 You have logged out. Please enter your credentials to log in.');
+  };
+
+  // If on the Index Portal page or unauthenticated
+  if (showIndexPortal || !currentUser) {
     return (
       <IndexPortalView
         users={allUsers}
         currentUser={currentUser}
         onLogin={handleLogin}
         onLoginWithCredentials={handleLoginWithCredentials}
-        onEnterDashboard={() => setShowIndexPortal(false)}
       />
     );
   }
@@ -302,7 +302,7 @@ export default function App() {
             setActiveNav('members');
           }}
           todayAttendance={currentUserTodayAttendance}
-          onLogoutToIndex={() => setShowIndexPortal(true)}
+          onLogoutToIndex={handleLogoutToIndex}
           onOpenChangePicture={() => {
             setMemberForPictureModal(currentUser);
             setIsChangePictureModalOpen(true);

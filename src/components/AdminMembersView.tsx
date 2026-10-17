@@ -81,8 +81,22 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
   // 1-Day & 30-min timers calculation
   const now = Date.now();
 
+  const [taskViewFilter, setTaskViewFilter] = useState<'active' | 'archived'>('active');
+
   // Tasks assigned to selected member
   const memberTasks = tasks.filter(t => t.assigneeIds.includes(selectedMember.id));
+
+  const isTaskTimeFinished = (task: TaskItem) => {
+    return (
+      task.status === 'Expired' ||
+      task.status === 'Completed' ||
+      (task.testingExpiresAt && new Date(task.testingExpiresAt).getTime() <= now)
+    );
+  };
+
+  const activeMemberTasks = memberTasks.filter(t => !isTaskTimeFinished(t));
+  const archivedMemberTasks = memberTasks.filter(t => isTaskTimeFinished(t));
+  const displayedTasks = taskViewFilter === 'active' ? activeMemberTasks : archivedMemberTasks;
 
   // Check 30-minute lock status for inspected submission
   const isSubmissionArchived = inspectedSubmission
@@ -253,10 +267,67 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
         </div>
       </div>
 
-      {/* Grid of Member Tasks ("naka box") + Plus Sign at the end ("meron sa dulo plus sign na mag aadd para sa panibagong task") */}
+      {/* Sub-tab switcher: Active Tasks vs Archived Tasks */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-950 p-2.5 rounded-2xl border border-pink-900/40">
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => setTaskViewFilter('active')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 ${
+              taskViewFilter === 'active'
+                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg shadow-pink-600/30'
+                : 'text-zinc-400 hover:text-white bg-black/60'
+            }`}
+          >
+            <span>Active Tasks</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-black/50 text-[10px] font-mono">
+              {activeMemberTasks.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTaskViewFilter('archived')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center gap-2 ${
+              taskViewFilter === 'archived'
+                ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg shadow-pink-600/30'
+                : 'text-zinc-400 hover:text-white bg-black/60'
+            }`}
+          >
+            <span>Archived (Time Ended)</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-black/50 text-[10px] font-mono">
+              {archivedMemberTasks.length}
+            </span>
+          </button>
+        </div>
+
+        <span className="text-[11px] text-zinc-400 px-2">
+          {taskViewFilter === 'active'
+            ? 'Active testing window. Tasks automatically disappear and move to Archive when time ends.'
+            : 'Archived records: testing time has finished or tasks are completed.'}
+        </span>
+      </div>
+
+      {/* Grid of Member Tasks */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {displayedTasks.length === 0 && (
+          <div className="col-span-full bg-zinc-950 border border-pink-900/30 rounded-3xl p-10 text-center text-zinc-400">
+            <Clock className="w-10 h-10 mx-auto text-pink-500/50 mb-2.5" />
+            <h4 className="text-sm font-bold text-white">
+              {taskViewFilter === 'active'
+                ? 'No active tasks in progress.'
+                : 'No archived tasks on record for this member.'}
+            </h4>
+            <p className="text-xs text-zinc-500 mt-1">
+              {taskViewFilter === 'active'
+                ? 'All assigned tasks for this member have either been completed or their testing time ended and moved to Archived.'
+                : 'Tasks whose 1-day testing window elapsed will automatically appear in this archived list.'}
+            </p>
+          </div>
+        )}
+
         {/* Render each task assigned to this member as a BOX */}
-        {memberTasks.map(task => {
+        {displayedTasks.map(task => {
           // Check 1-Day Testing Window status
           const isExpired =
             task.status === 'Expired' ||
@@ -406,8 +477,8 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
           );
         })}
 
-        {/* PLUS SIGN BOX AT THE END - ONLY VISIBLE TO ADMIN ("hindi dapat nakka pag add task ang member") */}
-        {isAdmin && (
+        {/* PLUS SIGN BOX AT THE END - ONLY VISIBLE TO ADMIN ON ACTIVE TASKS TAB */}
+        {isAdmin && taskViewFilter === 'active' && (
           <div
             onClick={() => onOpenCreateTaskForMember(selectedMember.id)}
             className="border-2 border-dashed border-pink-500/60 hover:border-pink-400 bg-pink-950/20 hover:bg-pink-950/40 rounded-3xl p-6 min-h-[220px] flex flex-col items-center justify-center text-center transition-all cursor-pointer shadow-lg hover:shadow-2xl hover:shadow-pink-950/60 group"
