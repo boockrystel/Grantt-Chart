@@ -11,6 +11,7 @@ import {
   Sparkles,
   Eye,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { TaskItem, UserAccount, TaskSubmission } from '../types';
 import { THIRTY_MINUTES_MS } from '../services/api';
@@ -46,6 +47,7 @@ interface TaskAnswerModalProps {
     }
   ) => Promise<void>;
   onResetTaskTestingTimer?: (taskId: string) => Promise<void>;
+  onDeleteTask?: (taskId: string, taskName: string) => Promise<void>;
 }
 
 export const TaskAnswerModal: React.FC<TaskAnswerModalProps> = ({
@@ -57,8 +59,12 @@ export const TaskAnswerModal: React.FC<TaskAnswerModalProps> = ({
   onSubmitUpdate,
   onEditSubmission,
   onResetTaskTestingTimer,
+  onDeleteTask,
 }) => {
   if (!isOpen || !task) return null;
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Find user's existing submission for this task
   const userSubmission = submissions.find(
@@ -278,12 +284,25 @@ export const TaskAnswerModal: React.FC<TaskAnswerModalProps> = ({
             <p className="text-xs text-zinc-400 mt-1">{task.description}</p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-2">
+            {currentUser.role === 'Admin' && onDeleteTask && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-600/70 text-red-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-red-950/50"
+                title="Delete Task (Admin / Project Leader)"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <span className="hidden sm:inline">Delete Task</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* 1-Day Testing Rule Banner */}
@@ -541,51 +560,117 @@ export const TaskAnswerModal: React.FC<TaskAnswerModalProps> = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-4 border-t border-zinc-900 flex items-center justify-end space-x-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition cursor-pointer"
-              >
-                Close
-              </button>
+            <div className="pt-4 border-t border-zinc-900 flex items-center justify-between gap-3">
+              <div>
+                {currentUser.role === 'Admin' && onDeleteTask && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="px-3.5 py-2.5 text-xs font-bold text-red-300 hover:text-white bg-red-950/70 hover:bg-red-900 border border-red-600/60 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-red-950/40"
+                    title="Delete Task (Admin / Project Leader)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Delete Task</span>
+                  </button>
+                )}
+              </div>
 
-              {isTaskLockedByExpiry ? (
+              <div className="flex items-center space-x-3">
                 <button
                   type="button"
-                  disabled
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-red-900/60 border border-red-600 rounded-xl cursor-not-allowed opacity-80"
+                  onClick={onClose}
+                  className="px-4 py-2.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition cursor-pointer"
                 >
-                  Task Locked (1-Day Testing Window Expired)
+                  Close
                 </button>
-              ) : isSubmissionLockedBy30Mins ? (
-                <button
-                  type="button"
-                  disabled
-                  className="px-5 py-2.5 text-xs font-bold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-xl cursor-not-allowed opacity-80"
-                >
-                  Permanently Archived (30 Mins Elapsed)
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center space-x-2 px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 rounded-xl shadow-lg shadow-pink-600/30 transition disabled:opacity-50 cursor-pointer"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>
-                    {isSubmitting
-                      ? 'Submitting...'
-                      : userSubmission
-                      ? 'Save Changes (Within 30m)'
-                      : 'Submit Deliverables & Proof'}
-                  </span>
-                </button>
-              )}
+
+                {isTaskLockedByExpiry ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-5 py-2.5 text-xs font-bold text-white bg-red-900/60 border border-red-600 rounded-xl cursor-not-allowed opacity-80"
+                  >
+                    Task Locked (1-Day Testing Window Expired)
+                  </button>
+                ) : isSubmissionLockedBy30Mins ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-5 py-2.5 text-xs font-bold text-zinc-400 bg-zinc-900 border border-zinc-800 rounded-xl cursor-not-allowed opacity-80"
+                  >
+                    Permanently Archived (30 Mins Elapsed)
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center space-x-2 px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 rounded-xl shadow-lg shadow-pink-600/30 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>
+                      {isSubmitting
+                        ? 'Submitting...'
+                        : userSubmission
+                        ? 'Save Changes (Within 30m)'
+                        : 'Submit Deliverables & Proof'}
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal for TaskAnswerModal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-70 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-zinc-950 border-2 border-red-600/80 rounded-3xl max-w-md w-full p-6 shadow-2xl shadow-red-950/80 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/40 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-black text-white">Delete Task?</h3>
+              <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+                Sigurado ka bang nais mong burahin ang module na{' '}
+                <strong className="text-red-400">{task.name}</strong>?
+              </p>
+              <p className="text-[11px] text-zinc-400 mt-2 bg-red-950/40 p-2.5 rounded-xl border border-red-900/40">
+                ⚠️ Permanenteng mabubura ang task na ito mula sa system at sa lahat ng member dashboards.
+              </p>
+            </div>
+            <div className="flex items-center justify-end space-x-3 pt-3 border-t border-zinc-900">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 text-xs font-bold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  if (!onDeleteTask || !task) return;
+                  try {
+                    setIsDeleting(true);
+                    setShowDeleteConfirm(false);
+                    await onDeleteTask(task.id, task.name);
+                    onClose();
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="px-5 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-lg shadow-red-600/40 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Deleting...' : 'Yes, Delete Task'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lightbox for attachment */}
       {previewLightbox && (

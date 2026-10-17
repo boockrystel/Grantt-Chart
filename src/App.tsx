@@ -241,6 +241,21 @@ export default function App() {
     await loadData();
   };
 
+  // Handle Delete Task (Admin / Project Leader)
+  const handleDeleteTask = async (taskId: string, taskName: string) => {
+    try {
+      await apiService.deleteTask(taskId);
+      triggerToast(`🗑️ Task "${taskName}" has been successfully deleted.`);
+      if (selectedTask?.id === taskId) {
+        setIsTaskModalOpen(false);
+        setSelectedTask(null);
+      }
+      await loadData();
+    } catch (err: any) {
+      triggerToast(`❌ Error deleting task: ${err.message || 'Unknown error'}`);
+    }
+  };
+
   const handleNudgeMember = (memberName: string) => {
     triggerToast(`🔔 Follow-up alert dispatched to ${memberName} for pending deliverables!`);
   };
@@ -424,6 +439,7 @@ export default function App() {
                   }}
                   onResetTaskTimer={handleResetTaskTimer}
                   onEditSubmission={handleEditSubmission}
+                  onDeleteTask={handleDeleteTask}
                   onOpenChangePicture={() => {
                     const member = allUsers.find(u => u.id === selectedMemberId) || currentUser;
                     setMemberForPictureModal(member);
@@ -468,6 +484,7 @@ export default function App() {
                   }}
                   onResetTaskTimer={handleResetTaskTimer}
                   onEditSubmission={handleEditSubmission}
+                  onDeleteTask={handleDeleteTask}
                   onOpenChangePicture={() => {
                     setMemberForPictureModal(currentUser);
                     setIsChangePictureModalOpen(true);
@@ -504,6 +521,7 @@ export default function App() {
           onSubmitUpdate={handleSubmitTaskUpdate}
           onEditSubmission={handleEditSubmission}
           onResetTaskTestingTimer={handleResetTaskTimer}
+          onDeleteTask={handleDeleteTask}
         />
       )}
 

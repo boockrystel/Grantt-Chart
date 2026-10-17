@@ -102,36 +102,64 @@ export const apiService = {
     localStorage.setItem(STORAGE_ATTENDANCE, JSON.stringify(INITIAL_ATTENDANCE));
   },
 
-  // Get all 7 pre-configured users
+  // Get all 7 pre-configured users (synced with server across devices)
   async getUsers(): Promise<UserAccount[]> {
+    try {
+      const res = await fetch('/api/users');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users) && data.users.length > 0) {
+          localStorage.setItem(STORAGE_USERS, JSON.stringify(data.users));
+          // If active user is logged in, ensure their avatar and data match the server
+          const active = this.getActiveUser();
+          if (active) {
+            const freshActive = data.users.find((u: UserAccount) => u.id === active.id);
+            if (freshActive && freshActive.avatar !== active.avatar) {
+              this.setActiveUser(freshActive);
+            }
+          }
+          return data.users;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
     const local = localStorage.getItem(STORAGE_USERS);
     return local ? JSON.parse(local) : PRECONFIGURED_USERS;
   },
 
   // Update user profile picture (avatar) in localStorage and server
   async updateUserAvatar(userId: string, newAvatar: string): Promise<UserAccount> {
-    const users = await this.getUsers();
-    const index = users.findIndex(u => u.id === userId);
-    if (index === -1) throw new Error('User not found');
-    users[index] = { ...users[index], avatar: newAvatar };
-    localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
-
-    const active = this.getActiveUser();
-    if (active && active.id === userId) {
-      this.setActiveUser(users[index]);
-    }
-
+    let serverUser: UserAccount | null = null;
     try {
-      await fetch(`/api/users/${userId}/avatar`, {
+      const res = await fetch(`/api/users/${userId}/avatar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ avatar: newAvatar }),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          serverUser = data.user;
+        }
+      }
     } catch {
       // Offline fallback
     }
 
-    return users[index];
+    const users = await this.getUsers();
+    const index = users.findIndex(u => u.id === userId);
+    if (index === -1) throw new Error('User not found');
+    const updated = serverUser || { ...users[index], avatar: newAvatar };
+    users[index] = updated;
+    localStorage.setItem(STORAGE_USERS, JSON.stringify(users));
+
+    const active = this.getActiveUser();
+    if (active && active.id === userId) {
+      this.setActiveUser(updated);
+    }
+
+    return updated;
   },
 
   // Authentication by Username / Email and Password
@@ -163,14 +191,36 @@ export const apiService = {
 
   // Authentication & Auto-Attendance (runs immediately on login)
   async loginUser(userId: string): Promise<{ user: UserAccount; attendance: AttendanceRecord; isFirstToday: boolean; message: string }> {
+    // Sync with server login endpoint
+    let serverUser: UserAccount | null = null;
+    let serverAtt: AttendanceRecord | null = null;
+    let isFirstToday = false;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          serverUser = data.user;
+          serverAtt = data.attendance;
+          isFirstToday = !!data.isFirstToday;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+
     const users = await this.getUsers();
-    const user = users.find(u => u.id === userId) || users[0];
+    const user = serverUser || users.find(u => u.id === userId) || users[0];
     const today = new Date().toISOString().split('T')[0];
     const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
     let attendanceList: AttendanceRecord[] = JSON.parse(localStorage.getItem(STORAGE_ATTENDANCE) || '[]');
-    let record = attendanceList.find(a => a.userId === user.id && a.date === today);
-    let isFirstToday = false;
+    let record = serverAtt || attendanceList.find(a => a.userId === user.id && a.date === today);
 
     if (!record) {
       isFirstToday = true;
@@ -187,6 +237,9 @@ export const apiService = {
       };
       attendanceList.unshift(record);
       localStorage.setItem(STORAGE_ATTENDANCE, JSON.stringify(attendanceList));
+    } else if (serverAtt && !attendanceList.some(a => a.id === serverAtt!.id)) {
+      attendanceList.unshift(serverAtt);
+      localStorage.setItem(STORAGE_ATTENDANCE, JSON.stringify(attendanceList));
     }
 
     this.setActiveUser(user);
@@ -196,23 +249,52 @@ export const apiService = {
       attendance: record,
       isFirstToday,
       message: isFirstToday
-        ? `Auto-attendance verified! Logged in as ${user.name} on ${today} at ${timeStr}.`
+        ? `Auto-attendance verified! Logged in as ${user.name} on ${today} at ${record.timestamp}.`
         : `Welcome back ${user.name}! Session active for today.`,
     };
   },
 
   // Get Attendance List
   async getAttendance(date?: string, userId?: string): Promise<AttendanceRecord[]> {
+    try {
+      const url = new URL('/api/attendance', window.location.origin);
+      if (date) url.searchParams.set('date', date);
+      if (userId) url.searchParams.set('userId', userId);
+      const res = await fetch(url.toString());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.records)) {
+          localStorage.setItem(STORAGE_ATTENDANCE, JSON.stringify(data.records));
+          return data.records;
+        }
+      }
+    } catch {}
+
     let list: AttendanceRecord[] = JSON.parse(localStorage.getItem(STORAGE_ATTENDANCE) || '[]');
     if (date) list = list.filter(a => a.date === date);
     if (userId) list = list.filter(a => a.userId === userId);
     return list;
   },
 
-  // Get Tasks with 1-day testing expiry evaluation
+  // Get Tasks with 1-day testing expiry evaluation (synced with server across devices)
   async getTasks(): Promise<TaskItem[]> {
-    const local = localStorage.getItem(STORAGE_TASKS);
-    let tasks: TaskItem[] = local ? JSON.parse(local) : INITIAL_TASKS;
+    let tasks: TaskItem[] = [];
+    try {
+      const res = await fetch('/api/tasks');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.tasks) && data.tasks.length > 0) {
+          tasks = data.tasks;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+
+    if (tasks.length === 0) {
+      const local = localStorage.getItem(STORAGE_TASKS);
+      tasks = local ? JSON.parse(local) : INITIAL_TASKS;
+    }
 
     const now = Date.now();
     let hasChanges = false;
@@ -234,10 +316,7 @@ export const apiService = {
       return t;
     });
 
-    if (hasChanges) {
-      localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
-    }
-
+    localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
     return tasks;
   },
 
@@ -252,12 +331,31 @@ export const apiService = {
     assigneeIds: string[];
     testingHoursWindow?: number; // defaults to 24 hours (1 day)
   }): Promise<TaskItem> {
-    const tasks = await this.getTasks();
-    const nextNumber = tasks.length + 1;
     const hours = newTaskData.testingHoursWindow || 24;
     const testingExpiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 
-    const task: TaskItem = {
+    let serverTask: TaskItem | null = null;
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newTaskData,
+          testingExpiresAt,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.task) {
+          serverTask = data.task;
+        }
+      }
+    } catch {}
+
+    const tasks = await this.getTasks();
+    const nextNumber = tasks.length + 1;
+
+    const task: TaskItem = serverTask || {
       id: `task-${Date.now()}`,
       taskNumber: nextNumber,
       code: `TASK-${String(nextNumber).padStart(2, '0')}`,
@@ -275,13 +373,23 @@ export const apiService = {
       updatedAt: new Date().toISOString(),
     };
 
-    tasks.push(task);
+    if (!tasks.some(t => t.id === task.id)) {
+      tasks.push(task);
+    }
     localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
     return task;
   },
 
   // Update Task
   async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
+    try {
+      await fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch {}
+
     const tasks = await this.getTasks();
     const idx = tasks.findIndex(t => t.id === id);
     if (idx === -1) throw new Error('Task not found');
@@ -289,6 +397,40 @@ export const apiService = {
     tasks[idx] = { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };
     localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
     return tasks[idx];
+  },
+
+  // Delete Task (Admin / Project Leader action)
+  async deleteTask(taskId: string): Promise<boolean> {
+    // 1. Delete from backend server
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // offline fallback
+    }
+
+    // 2. Delete from local storage tasks
+    const local = localStorage.getItem(STORAGE_TASKS);
+    if (local) {
+      try {
+        const tasks: TaskItem[] = JSON.parse(local);
+        const filtered = tasks.filter(t => t.id !== taskId);
+        localStorage.setItem(STORAGE_TASKS, JSON.stringify(filtered));
+      } catch {}
+    }
+
+    // 3. Delete any submissions related to this task
+    const subLocal = localStorage.getItem(STORAGE_SUBMISSIONS);
+    if (subLocal) {
+      try {
+        const subs: TaskSubmission[] = JSON.parse(subLocal);
+        const filteredSubs = subs.filter(s => s.taskId !== taskId);
+        localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(filteredSubs));
+      } catch {}
+    }
+
+    return true;
   },
 
   // Reset or extend a task's 1-day testing window (for testing/demo)

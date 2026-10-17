@@ -18,6 +18,7 @@ import {
   Calendar,
   ExternalLink,
   Camera,
+  Trash2,
 } from 'lucide-react';
 import { UserAccount, TaskItem, TaskSubmission } from '../types';
 import { THIRTY_MINUTES_MS } from '../services/api';
@@ -33,6 +34,7 @@ interface AdminMembersViewProps {
   onOpenCreateTaskForMember: (memberId: string) => void;
   onResetTaskTimer: (taskId: string) => Promise<void>;
   onOpenChangePicture?: () => void;
+  onDeleteTask?: (taskId: string, taskName: string) => Promise<void>;
   onEditSubmission?: (
     submissionId: string,
     updates: {
@@ -56,9 +58,12 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
   onOpenCreateTaskForMember,
   onResetTaskTimer,
   onOpenChangePicture,
+  onDeleteTask,
   onEditSubmission,
 }) => {
   const isAdmin = currentUser.role === 'Admin';
+  const [taskToDelete, setTaskToDelete] = useState<TaskItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // If currentUser is a Member, enforce their own view: they see their assigned tasks
   const effectiveMemberId = isAdmin
@@ -369,9 +374,24 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
               <div>
                 {/* Header: Module Phase and Status (NO DATES DISPLAYED!) */}
                 <div className="flex items-center justify-between text-xs mb-2.5">
-                  <span className="font-mono font-bold text-pink-400 bg-pink-950/80 px-2.5 py-0.5 rounded-full border border-pink-500/30">
-                    {task.code}
-                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-mono font-bold text-pink-400 bg-pink-950/80 px-2.5 py-0.5 rounded-full border border-pink-500/30">
+                      {task.code}
+                    </span>
+                    {isAdmin && onDeleteTask && (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setTaskToDelete(task);
+                        }}
+                        className="p-1 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-950/60 border border-transparent hover:border-red-600/40 transition cursor-pointer"
+                        title="Delete Task (Admin / Project Leader)"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
 
                   {isExpired ? (
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white shadow-sm animate-pulse">
@@ -540,12 +560,25 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
                 </p>
               </div>
 
-              <button
-                onClick={() => setInspectedTask(null)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
-              >
-                ✕
-              </button>
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                {isAdmin && onDeleteTask && (
+                  <button
+                    type="button"
+                    onClick={() => setTaskToDelete(inspectedTask)}
+                    className="px-3.5 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-600/70 text-red-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-md shadow-red-950/50"
+                    title="Delete Task (Admin / Project Leader)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    <span>Delete Task</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setInspectedTask(null)}
+                  className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-900 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Body: Deliverables Submitted by the Member */}
@@ -746,6 +779,60 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
             >
               Close [ESC]
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Task Confirmation Modal (Admin / Project Leader) */}
+      {taskToDelete && (
+        <div className="fixed inset-0 z-70 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-zinc-950 border-2 border-red-600/80 rounded-3xl max-w-md w-full p-6 shadow-2xl shadow-red-950/80 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/40 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-black text-white">Delete Task?</h3>
+              <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+                Sigurado ka bang nais mong burahin ang module na{' '}
+                <strong className="text-red-400">{taskToDelete.name}</strong>?
+              </p>
+              <p className="text-[11px] text-zinc-400 mt-2 bg-red-950/40 p-2.5 rounded-xl border border-red-900/40">
+                ⚠️ Permanenteng mawawala ang task na ito at ang lahat ng deliverables na naipasa para dito.
+              </p>
+            </div>
+            <div className="flex items-center justify-end space-x-3 pt-3 border-t border-zinc-900">
+              <button
+                type="button"
+                onClick={() => setTaskToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 text-xs font-bold text-zinc-300 bg-zinc-900 hover:bg-zinc-800 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={async () => {
+                  if (!onDeleteTask || !taskToDelete) return;
+                  try {
+                    setIsDeleting(true);
+                    const name = taskToDelete.name;
+                    const id = taskToDelete.id;
+                    setTaskToDelete(null);
+                    if (inspectedTask?.id === id) {
+                      setInspectedTask(null);
+                    }
+                    await onDeleteTask(id, name);
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                className="px-5 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-lg shadow-red-600/40 transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{isDeleting ? 'Deleting...' : 'Yes, Delete Task'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

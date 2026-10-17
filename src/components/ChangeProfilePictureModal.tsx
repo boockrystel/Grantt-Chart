@@ -57,9 +57,41 @@ export const ChangeProfilePictureModal: React.FC<ChangeProfilePictureModalProps>
     setErrorMsg('');
     const reader = new FileReader();
     reader.onload = event => {
-      if (event.target?.result) {
-        setSelectedAvatar(event.target.result as string);
-      }
+      const src = event.target?.result as string;
+      if (!src) return;
+      // Resize image to max 320px for fast cross-device sync & mobile performance
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_SIZE = 320;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.88);
+          setSelectedAvatar(compressed);
+        } else {
+          setSelectedAvatar(src);
+        }
+      };
+      img.onerror = () => {
+        setSelectedAvatar(src);
+      };
+      img.src = src;
     };
     reader.readAsDataURL(file);
   };

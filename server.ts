@@ -411,8 +411,12 @@ try {
   if (fs.existsSync(DB_FILE)) {
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
     db = JSON.parse(raw);
-    // Ensure all 7 users exist
-    db.users = PRECONFIGURED_USERS;
+    // Ensure all 7 users exist while PRESERVING user-customized profile pictures across restarts and devices!
+    const existingMap = new Map((db.users || []).map((u: UserAccount) => [u.id, u]));
+    db.users = PRECONFIGURED_USERS.map(pUser => {
+      const existing = existingMap.get(pUser.id);
+      return existing && existing.avatar ? { ...pUser, ...existing, avatar: existing.avatar } : pUser;
+    });
   } else {
     db = {
       users: PRECONFIGURED_USERS,
@@ -581,6 +585,27 @@ app.put('/api/tasks/:id', (req: Request, res: Response) => {
   saveDb();
 
   res.json({ success: true, task, message: 'Task updated successfully.' });
+});
+
+// Delete Task (Admin / Project Leader action)
+app.delete('/api/tasks/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = db.tasks.findIndex(t => t.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: 'Task not found' });
+  }
+
+  const [removedTask] = db.tasks.splice(index, 1);
+  // Remove related submissions
+  db.submissions = db.submissions.filter(s => s.taskId !== id);
+  saveDb();
+
+  res.json({
+    success: true,
+    message: `Task "${removedTask.name}" has been permanently deleted.`,
+    deletedTaskId: id,
+  });
 });
 
 // Interactive Table Submission: Member adds Enhancements, Improvements, Suggestions, & Attachment
