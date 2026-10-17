@@ -1,5 +1,14 @@
 import { UserAccount, TaskItem, TaskSubmission, AttendanceRecord } from '../types';
 
+export function getInitialAvatar(name: string, bg: string = '#ec4899', color: string = '#ffffff'): string {
+  const parts = name.replace(/,/g, '').trim().split(/\s+/);
+  const initials = parts.length >= 2 
+    ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() 
+    : (name.slice(0, 2).toUpperCase() || 'CP');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" rx="36" fill="${bg}"/><text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="900" fill="${color}" text-anchor="middle" dominant-baseline="middle">${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export const PRECONFIGURED_USERS: UserAccount[] = [
   {
     id: 'user-1',
@@ -9,7 +18,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Admin',
     title: 'Project Leader (Admin)',
     email: 'cabildo.kj@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Kathlyn Cabildo', '#be185d', '#ffffff'),
   },
   {
     id: 'user-2',
@@ -19,7 +28,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Back-end Developer (Member)',
     email: 'almira.e@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Eugene Almira', '#831843', '#fbcfe8'),
   },
   {
     id: 'user-3',
@@ -29,7 +38,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Data Gatherer (Member)',
     email: 'amponin.ja@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Alexis Amponin', '#4c0519', '#f472b6'),
   },
   {
     id: 'user-4',
@@ -39,7 +48,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Head Documentation (Member)',
     email: 'boockrystel@gmail.com',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Krystel Booc', '#db2777', '#ffffff'),
   },
   {
     id: 'user-5',
@@ -49,7 +58,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Quality Assurance / System Analyst (Member)',
     email: 'catubay.ml@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Lawrence Catubay', '#9d174d', '#ffffff'),
   },
   {
     id: 'user-6',
@@ -59,7 +68,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Data Gatherer (Member)',
     email: 'sunga.ac@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('Aiman Sunga', '#701a75', '#ffffff'),
   },
   {
     id: 'user-7',
@@ -69,7 +78,7 @@ export const PRECONFIGURED_USERS: UserAccount[] = [
     role: 'Member',
     title: 'Data Gatherer (Member)',
     email: 'tapales.jr@capstone.edu',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80',
+    avatar: getInitialAvatar('JohnRic Tapales', '#500724', '#fbcfe8'),
   },
 ];
 

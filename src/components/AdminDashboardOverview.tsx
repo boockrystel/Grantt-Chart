@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Activity,
   Bell,
+  UserCheck,
 } from 'lucide-react';
 import {
   UserAccount,
@@ -35,6 +36,7 @@ interface AdminDashboardOverviewProps {
   onSelectTask: (task: TaskItem) => void;
   onNavigateToMembers: () => void;
   onNavigateToTasks: () => void;
+  onNavigateToAttendance: () => void;
   onNudgeMember: (name: string) => void;
 }
 
@@ -48,6 +50,7 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
   onSelectTask,
   onNavigateToMembers,
   onNavigateToTasks,
+  onNavigateToAttendance,
   onNudgeMember,
 }) => {
   const totalTasks = tasks.length;
@@ -78,10 +81,17 @@ export const AdminDashboardOverview: React.FC<AdminDashboardOverviewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={onNavigateToAttendance}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-600/30 transition cursor-pointer flex items-center gap-1.5"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>Attendance Tracker</span>
+            </button>
             <button
               onClick={onNavigateToTasks}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-600/30 transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-pink-500/50 shadow-md transition cursor-pointer"
             >
               View All Tasks
             </button>

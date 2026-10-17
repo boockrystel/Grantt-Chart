@@ -31,9 +31,31 @@ function initializeLocalStorageDatabase() {
     localStorage.setItem(STORAGE_USERS, JSON.stringify(PRECONFIGURED_USERS));
   } else {
     try {
-      const parsed = JSON.parse(existingUsers);
+      const parsed: UserAccount[] = JSON.parse(existingUsers);
       if (!parsed[0]?.username) {
         localStorage.setItem(STORAGE_USERS, JSON.stringify(PRECONFIGURED_USERS));
+      } else {
+        // If stored avatars have old unsplash photo links, replace with clean SVG avatars
+        const hasUnsplash = parsed.some(u => u.avatar && u.avatar.includes('unsplash.com'));
+        if (hasUnsplash) {
+          const updated = parsed.map(u => {
+            if (u.avatar && u.avatar.includes('unsplash.com')) {
+              const fresh = PRECONFIGURED_USERS.find(p => p.id === u.id);
+              return fresh ? { ...u, avatar: fresh.avatar } : u;
+            }
+            return u;
+          });
+          localStorage.setItem(STORAGE_USERS, JSON.stringify(updated));
+
+          const active = localStorage.getItem(STORAGE_ACTIVE_USER);
+          if (active) {
+            const activeUser: UserAccount = JSON.parse(active);
+            if (activeUser.avatar && activeUser.avatar.includes('unsplash.com')) {
+              const fresh = updated.find(u => u.id === activeUser.id);
+              if (fresh) localStorage.setItem(STORAGE_ACTIVE_USER, JSON.stringify(fresh));
+            }
+          }
+        }
       }
     } catch {
       localStorage.setItem(STORAGE_USERS, JSON.stringify(PRECONFIGURED_USERS));
@@ -86,7 +108,7 @@ export const apiService = {
     return local ? JSON.parse(local) : PRECONFIGURED_USERS;
   },
 
-  // Update user profile picture (avatar) in localStorage
+  // Update user profile picture (avatar) in localStorage and server
   async updateUserAvatar(userId: string, newAvatar: string): Promise<UserAccount> {
     const users = await this.getUsers();
     const index = users.findIndex(u => u.id === userId);
@@ -98,6 +120,17 @@ export const apiService = {
     if (active && active.id === userId) {
       this.setActiveUser(users[index]);
     }
+
+    try {
+      await fetch(`/api/users/${userId}/avatar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar: newAvatar }),
+      });
+    } catch {
+      // Offline fallback
+    }
+
     return users[index];
   },
 

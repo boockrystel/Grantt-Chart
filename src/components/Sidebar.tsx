@@ -14,21 +14,22 @@ import {
   ChevronDown,
   ChevronRight,
   User as UserIcon,
+  Camera,
 } from 'lucide-react';
 import { UserAccount, AttendanceRecord } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  activeNav: 'dashboard' | 'members' | 'archive' | 'schema';
-  onSelectNav: (nav: 'dashboard' | 'members' | 'archive' | 'schema') => void;
+  activeNav: 'dashboard' | 'members' | 'archive' | 'attendance';
+  onSelectNav: (nav: 'dashboard' | 'members' | 'archive' | 'attendance') => void;
   currentUser: UserAccount;
   allUsers: UserAccount[];
   selectedMemberId: string | null;
   onSelectMember: (memberId: string) => void;
   todayAttendance: AttendanceRecord | null;
   onLogoutToIndex: () => void;
-  onSwitchUser: () => void;
+  onOpenChangePicture: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectMember,
   todayAttendance,
   onLogoutToIndex,
-  onSwitchUser,
+  onOpenChangePicture,
 }) => {
   const isAdmin = currentUser.role === 'Admin';
   // Keep Members dropdown open by default if activeNav is members
@@ -117,6 +118,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={onOpenChangePicture}
+              className="mt-3 w-full flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-xl bg-pink-950/70 hover:bg-pink-900 border border-pink-500/40 text-pink-300 hover:text-white text-[11px] font-bold shadow-sm transition cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5 text-pink-400" />
+              <span>Change Profile Picture</span>
+            </button>
           </div>
 
           {/* Navigation Items (Dashboard, Members Dropdown, Archive, Schema) */}
@@ -223,6 +233,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <Archive className="w-4 h-4 text-pink-400" />
                   <span>Quality Audit Hub</span>
                 </button>
+
+                {/* 4. Attendance Tracker (Admin) */}
+                <button
+                  onClick={() => {
+                    onSelectNav('attendance');
+                    if (window.innerWidth < 1024) onToggle();
+                  }}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+                    activeNav === 'attendance'
+                      ? 'bg-gradient-to-r from-pink-600 to-rose-600 text-white shadow-lg shadow-pink-600/30 ring-1 ring-pink-400'
+                      : 'text-zinc-300 hover:text-pink-300 hover:bg-zinc-950 border border-transparent hover:border-pink-900/30'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <UserCheck className="w-4 h-4 text-pink-400" />
+                    <span>Attendance Tracker</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-950 text-pink-300 border border-pink-500/30 font-mono">
+                    Live
+                  </span>
+                </button>
               </>
             ) : (
               /* Member Navigation */
@@ -311,40 +342,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               </>
             )}
-
-            {/* SQL DDL Tab */}
-            <button
-              onClick={() => {
-                onSelectNav('schema');
-                if (window.innerWidth < 1024) onToggle();
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-medium transition cursor-pointer ${
-                activeNav === 'schema'
-                  ? 'bg-zinc-900 text-pink-400 border border-pink-500/50'
-                  : 'text-zinc-400 hover:text-pink-300 hover:bg-zinc-950'
-              }`}
-            >
-              <Database className="w-4 h-4 text-pink-400" />
-              <span>SQL Schema &amp; DDL</span>
-            </button>
           </nav>
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-pink-950/80 bg-black space-y-2">
-          <button
-            onClick={onSwitchUser}
-            className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-semibold bg-zinc-950 hover:bg-zinc-900 border border-pink-900/40 text-pink-300 transition cursor-pointer"
-          >
-            <UserCheck className="w-4 h-4 text-pink-400" />
-            <span>Switch Account</span>
-          </button>
-
+        <div className="p-4 border-t border-pink-950/80 bg-black">
           <button
             onClick={onLogoutToIndex}
-            className="w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-white hover:bg-zinc-900/60 transition cursor-pointer"
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-zinc-950 hover:bg-zinc-900 border border-pink-900/40 transition cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5 text-zinc-400" />
+            <LogOut className="w-3.5 h-3.5 text-pink-400" />
             <span>Logout to Index Page</span>
           </button>
         </div>

@@ -165,41 +165,6 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
             </div>
           )}
         </div>
-
-        {/* Admin-only Quick Member Switcher Pills */}
-        {isAdmin && (
-          <div className="mt-5 pt-4 border-t border-zinc-900/80 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-            <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider flex-shrink-0 mr-1">
-              Switch:
-            </span>
-            {users.map(u => {
-              const isSelected = u.id === selectedMember.id;
-              return (
-                <button
-                  key={u.id}
-                  onClick={() => onSelectMember(u.id)}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex-shrink-0 ${
-                    isSelected
-                      ? 'bg-pink-600 text-white shadow-md shadow-pink-600/30 ring-1 ring-pink-400'
-                      : 'bg-zinc-950 text-zinc-400 hover:text-white hover:bg-zinc-900 border border-zinc-900'
-                  }`}
-                >
-                  <img
-                    src={u.avatar}
-                    alt={u.name}
-                    className="w-5 h-5 rounded-md object-cover ring-1 ring-pink-500/50"
-                  />
-                  <span>{u.name.split(',')[0]}</span>
-                  {u.role === 'Admin' && (
-                    <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-pink-950 text-pink-300 border border-pink-500/40">
-                      PL
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Selected Member Profile Card */}
@@ -211,7 +176,7 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
               alt={selectedMember.name}
               className="w-16 h-16 rounded-2xl object-cover ring-2 ring-pink-500 shadow-lg shadow-pink-500/30"
             />
-            {onOpenChangePicture && selectedMember.id === currentUser.id && (
+            {onOpenChangePicture && (
               <button
                 type="button"
                 onClick={onOpenChangePicture}
@@ -241,20 +206,20 @@ export const AdminMembersView: React.FC<AdminMembersViewProps> = ({
             <p className="text-xs text-pink-400 font-medium mt-0.5">
               {selectedMember.title} • Username: <span className="font-mono text-zinc-300">@{selectedMember.username}</span>
             </p>
-            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-zinc-400">
-              <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2.5 mt-2 text-[11px] text-zinc-400">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 border border-emerald-900/40 text-emerald-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>Auto-Attendance: Logged Today</span>
               </div>
 
-              {onOpenChangePicture && selectedMember.id === currentUser.id && (
+              {onOpenChangePicture && (
                 <button
                   type="button"
                   onClick={onOpenChangePicture}
-                  className="inline-flex items-center space-x-1 text-[11px] font-bold text-pink-400 hover:text-pink-300 bg-zinc-900 hover:bg-zinc-850 px-2.5 py-0.5 rounded-lg border border-pink-900/40 cursor-pointer transition"
+                  className="inline-flex items-center space-x-1.5 text-xs font-bold text-pink-300 hover:text-white bg-pink-950/70 hover:bg-pink-900 border border-pink-500/40 px-3 py-1 rounded-xl shadow-sm cursor-pointer transition"
                 >
-                  <Camera className="w-3 h-3" />
-                  <span>Change Photo</span>
+                  <Camera className="w-3.5 h-3.5 text-pink-400" />
+                  <span>Change Profile Picture</span>
                 </button>
               )}
             </div>

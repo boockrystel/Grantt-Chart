@@ -37,7 +37,6 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showCheatSheet, setShowCheatSheet] = useState(true);
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,18 +70,6 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
     }
   };
 
-  const handleQuickFill = async (user: UserAccount) => {
-    setUsernameInput(user.username);
-    setPasswordInput(user.password);
-    setErrorMsg('');
-    try {
-      setIsLoggingIn(true);
-      await onLogin(user.id);
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black text-white selection:bg-pink-500 selection:text-white flex flex-col justify-between">
       {/* Top Navbar on Index */}
@@ -103,27 +90,13 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
           </div>
 
           {currentUser ? (
-            <div className="flex items-center space-x-3">
-              <div className="hidden sm:flex items-center space-x-2 bg-zinc-950 px-3 py-1.5 rounded-xl border border-pink-900/40">
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-6 h-6 rounded-full object-cover ring-1 ring-pink-500"
-                />
-                <span className="text-xs font-semibold text-white">
-                  {currentUser.name}
-                </span>
-                <span className="text-[10px] text-pink-400">({currentUser.role})</span>
-              </div>
-
-              <button
-                onClick={onEnterDashboard}
-                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-600/30 transition cursor-pointer"
-              >
-                <span>Enter System Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={onEnterDashboard}
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 shadow-lg shadow-pink-600/30 transition cursor-pointer"
+            >
+              <span>Enter System Dashboard</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           ) : (
             <span className="text-xs text-pink-400 font-mono">
               Auto-Attendance Verification Ready
@@ -268,61 +241,11 @@ export const IndexPortalView: React.FC<IndexPortalViewProps> = ({
               </button>
             </form>
 
-            {/* Quick-Click Accounts Cheat Sheet */}
-            <div className="mt-6 pt-4 border-t border-zinc-900">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-mono uppercase font-bold tracking-wider text-pink-400 flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5" />
-                  <span>Pre-Configured Accounts (Click to Fill &amp; Sign In):</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowCheatSheet(!showCheatSheet)}
-                  className="text-[10px] text-zinc-400 hover:text-pink-300 underline cursor-pointer"
-                >
-                  {showCheatSheet ? 'Hide' : 'Show All'}
-                </button>
+            <div className="mt-6 pt-4 border-t border-zinc-900 text-center">
+              <div className="inline-flex items-center gap-1.5 text-xs text-zinc-500 font-medium">
+                <ShieldCheck className="w-4 h-4 text-pink-400" />
+                <span>Authorized Capstone Development Team Access Only</span>
               </div>
-
-              {showCheatSheet && (
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {users.map(u => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => handleQuickFill(u)}
-                      className="w-full text-left p-2.5 rounded-xl bg-black border border-zinc-900 hover:border-pink-500/60 hover:bg-zinc-900 transition flex items-center justify-between group cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <img
-                          src={u.avatar}
-                          alt={u.name}
-                          className="w-8 h-8 rounded-lg object-cover ring-1 ring-pink-500/40 flex-shrink-0"
-                        />
-                        <div className="min-w-0 truncate">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-white group-hover:text-pink-300 truncate">
-                              {u.name}
-                            </span>
-                            {u.role === 'Admin' && (
-                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-pink-600 text-white">
-                                PL
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] font-mono text-zinc-400 block truncate">
-                            User: <strong className="text-pink-400">{u.username}</strong> • Pass: <strong className="text-zinc-300">{u.password}</strong>
-                          </span>
-                        </div>
-                      </div>
-
-                      <span className="text-[10px] font-bold text-pink-400 group-hover:translate-x-0.5 transition flex-shrink-0">
-                        1-Click Fill →
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

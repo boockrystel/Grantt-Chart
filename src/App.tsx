@@ -18,8 +18,8 @@ import { MemberWorkspace } from './components/MemberWorkspace';
 import { TaskAnswerModal } from './components/TaskAnswerModal';
 import { TaskRegistryModal } from './components/TaskRegistryModal';
 import { QualityAuditHub } from './components/QualityAuditHub';
-import { DatabaseSchemaViewer } from './components/DatabaseSchemaViewer';
-import { LoginModal } from './components/LoginModal';
+import { AttendanceLogViewer } from './components/AttendanceLogViewer';
+import { ChangeProfilePictureModal } from './components/ChangeProfilePictureModal';
 import {
   Menu,
   CheckCircle2,
@@ -31,6 +31,7 @@ import {
   Clock,
   ArrowRight,
   LogOut,
+  Camera,
 } from 'lucide-react';
 
 export default function App() {
@@ -54,8 +55,8 @@ export default function App() {
   });
   const [efficiencyRanking, setEfficiencyRanking] = useState<EfficiencyLeaderboardItem[]>([]);
 
-  // Navigation states: 'dashboard' | 'members' | 'archive' | 'schema'
-  const [activeNav, setActiveNav] = useState<'dashboard' | 'members' | 'archive' | 'schema'>('dashboard');
+  // Navigation states: 'dashboard' | 'members' | 'archive' | 'attendance'
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'members' | 'archive' | 'attendance'>('dashboard');
   const [selectedMemberId, setSelectedMemberId] = useState<string>('user-2'); // Eugene Almira by default
   const [registryDefaultMemberId, setRegistryDefaultMemberId] = useState<string | null>(null);
   const [memberSubTab, setMemberSubTab] = useState<'tasks' | 'archive'>('tasks');
@@ -65,7 +66,8 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isTaskRegistryOpen, setIsTaskRegistryOpen] = useState(false);
-  const [isSwitchUserModalOpen, setIsSwitchUserModalOpen] = useState(false);
+  const [isChangePictureModalOpen, setIsChangePictureModalOpen] = useState(false);
+  const [memberForPictureModal, setMemberForPictureModal] = useState<UserAccount | null>(null);
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -148,6 +150,18 @@ export default function App() {
         : `👋 Welcome back, ${res.user.name}! Credentials verified.`
     );
     await loadData();
+  };
+
+  // Handle Update Profile Picture for any member
+  const handleUpdateProfilePicture = async (newAvatarUrl: string) => {
+    const target = memberForPictureModal || currentUser;
+    if (!target) return;
+    const updated = await apiService.updateUserAvatar(target.id, newAvatarUrl);
+    triggerToast(`✅ Profile picture updated for ${updated.name}!`);
+    await loadData();
+    if (currentUser?.id === target.id) {
+      setCurrentUser(updated);
+    }
   };
 
   // Handle Task Select
@@ -289,7 +303,10 @@ export default function App() {
           }}
           todayAttendance={currentUserTodayAttendance}
           onLogoutToIndex={() => setShowIndexPortal(true)}
-          onSwitchUser={() => setIsSwitchUserModalOpen(true)}
+          onOpenChangePicture={() => {
+            setMemberForPictureModal(currentUser);
+            setIsChangePictureModalOpen(true);
+          }}
         />
       )}
 
@@ -338,21 +355,34 @@ export default function App() {
               Index Gateway
             </button>
 
-            {/* Profile Avatar / Quick Switch */}
+            {/* Profile Avatar / Change Picture */}
             {currentUser && (
               <button
-                onClick={() => setIsSwitchUserModalOpen(true)}
-                className="flex items-center space-x-2 p-1 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-pink-900/40 transition cursor-pointer"
-                title="Switch Account"
+                onClick={() => {
+                  setMemberForPictureModal(currentUser);
+                  setIsChangePictureModalOpen(true);
+                }}
+                className="flex items-center space-x-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-pink-900/40 hover:border-pink-500/60 transition cursor-pointer group"
+                title="Change Profile Picture"
               >
-                <img
-                  src={currentUser.avatar}
-                  alt={currentUser.name}
-                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-pink-500"
-                />
-                <span className="text-xs font-bold text-white hidden sm:inline">
-                  {currentUser.name.split(',')[0]}
-                </span>
+                <div className="relative">
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="w-7 h-7 rounded-lg object-cover ring-1 ring-pink-500"
+                  />
+                  <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                    <Camera className="w-3.5 h-3.5 text-pink-300" />
+                  </div>
+                </div>
+                <div className="text-left hidden sm:block">
+                  <span className="text-xs font-bold text-white block leading-tight">
+                    {currentUser.name.split(',')[0]}
+                  </span>
+                  <span className="text-[10px] text-pink-400 block leading-tight">
+                    Change Picture
+                  </span>
+                </div>
               </button>
             )}
           </div>
@@ -374,6 +404,7 @@ export default function App() {
                   onSelectTask={handleSelectTask}
                   onNavigateToMembers={() => setActiveNav('members')}
                   onNavigateToTasks={() => setActiveNav('members')}
+                  onNavigateToAttendance={() => setActiveNav('attendance')}
                   onNudgeMember={handleNudgeMember}
                 />
               )}
@@ -393,6 +424,11 @@ export default function App() {
                   }}
                   onResetTaskTimer={handleResetTaskTimer}
                   onEditSubmission={handleEditSubmission}
+                  onOpenChangePicture={() => {
+                    const member = allUsers.find(u => u.id === selectedMemberId) || currentUser;
+                    setMemberForPictureModal(member);
+                    setIsChangePictureModalOpen(true);
+                  }}
                 />
               )}
 
@@ -406,7 +442,13 @@ export default function App() {
                 />
               )}
 
-              {activeNav === 'schema' && <DatabaseSchemaViewer />}
+              {activeNav === 'attendance' && (
+                <AttendanceLogViewer
+                  attendanceRecords={attendanceRecords}
+                  users={allUsers}
+                  currentUser={currentUser}
+                />
+              )}
             </>
           ) : (
             /* Member Views */
@@ -426,6 +468,10 @@ export default function App() {
                   }}
                   onResetTaskTimer={handleResetTaskTimer}
                   onEditSubmission={handleEditSubmission}
+                  onOpenChangePicture={() => {
+                    setMemberForPictureModal(currentUser);
+                    setIsChangePictureModalOpen(true);
+                  }}
                 />
               )}
 
@@ -439,8 +485,6 @@ export default function App() {
                   setActiveSubTab={setMemberSubTab}
                 />
               )}
-
-              {activeNav === 'schema' && <DatabaseSchemaViewer />}
             </>
           )}
         </main>
@@ -476,21 +520,18 @@ export default function App() {
         onCreateTask={handleCreateTask}
       />
 
-      {/* Switch Account Modal */}
-      <LoginModal
-        users={allUsers}
-        isOpen={isSwitchUserModalOpen}
-        onLogin={async (userId: string) => {
-          await handleLogin(userId);
-          setIsSwitchUserModalOpen(false);
-        }}
-        onLoginWithCredentials={async (u: string, p: string) => {
-          await handleLoginWithCredentials(u, p);
-          setIsSwitchUserModalOpen(false);
-        }}
-        onClose={() => setIsSwitchUserModalOpen(false)}
-        canDismiss={true}
-      />
+      {/* Change Profile Picture Modal */}
+      {(memberForPictureModal || currentUser) && (
+        <ChangeProfilePictureModal
+          isOpen={isChangePictureModalOpen}
+          onClose={() => {
+            setIsChangePictureModalOpen(false);
+            setMemberForPictureModal(null);
+          }}
+          currentUser={memberForPictureModal || currentUser!}
+          onUpdateAvatar={handleUpdateProfilePicture}
+        />
+      )}
     </div>
   );
 }

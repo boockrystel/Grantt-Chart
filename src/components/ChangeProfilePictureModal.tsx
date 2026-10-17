@@ -9,16 +9,21 @@ interface ChangeProfilePictureModalProps {
   onUpdateAvatar: (newAvatarUrl: string) => Promise<void>;
 }
 
-// 8 stylish preset avatars for instant selection
+function makeSvgPreset(label: string, bg: string, textCol: string = '#ffffff') {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" rx="36" fill="${bg}"/><text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="900" fill="${textCol}" text-anchor="middle" dominant-baseline="middle">${label}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+// 8 stylish vector/monogram presets for instant selection
 const AVATAR_PRESETS = [
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80',
+  makeSvgPreset('HOT PINK', '#db2777', '#ffffff'),
+  makeSvgPreset('NEON ROSE', '#f43f5e', '#ffffff'),
+  makeSvgPreset('PURPLE', '#9333ea', '#fbcfe8'),
+  makeSvgPreset('CYAN', '#06b6d4', '#ffffff'),
+  makeSvgPreset('EMERALD', '#10b981', '#ffffff'),
+  makeSvgPreset('BLUE', '#3b82f6', '#ffffff'),
+  makeSvgPreset('AMBER', '#f59e0b', '#000000'),
+  makeSvgPreset('DARK ONYX', '#18181b', '#ec4899'),
 ];
 
 export const ChangeProfilePictureModal: React.FC<ChangeProfilePictureModalProps> = ({
