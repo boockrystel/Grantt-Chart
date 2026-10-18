@@ -106,18 +106,25 @@ export default function App() {
         }
         return prevUser;
       });
+
+      // Keep currently viewed task refreshed in real time across devices
+      setSelectedTask(prevTask => {
+        if (!prevTask) return null;
+        const freshTask = t.find(task => task.id === prevTask.id);
+        return freshTask || prevTask;
+      });
     } catch (err) {
       console.error('Error loading data:', err);
     }
   }, []);
 
-  // Real-time synchronization across devices (every 3 seconds and on window focus / visibility change)
+  // Real-time synchronization across devices (every 2 seconds and on window focus / visibility change)
   useEffect(() => {
     loadData();
 
     const interval = setInterval(() => {
       loadData();
-    }, 3000);
+    }, 2000);
 
     const handleFocus = () => {
       loadData();

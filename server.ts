@@ -130,7 +130,8 @@ export interface TaskItem {
   description: string;
   startDate: string; // YYYY-MM-DD
   dueDate: string; // YYYY-MM-DD
-  status: 'Not Started' | 'In Progress' | 'In Review' | 'Completed';
+  testingExpiresAt?: string; // ISO string for 24-hr testing window
+  status: 'Not Started' | 'In Progress' | 'In Review' | 'Completed' | 'Expired';
   progress: number; // 0 - 100
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   assigneeIds: string[]; // user IDs
@@ -158,6 +159,8 @@ export interface TaskSubmission {
   reviewedBy?: string;
   reviewedAt?: string;
   submittedAt: string;
+  isArchived?: boolean;
+  archivedAt?: string;
 }
 
 // Initial Database in Memory with Persistent Disk Snapshot
@@ -656,25 +659,57 @@ app.post('/api/tasks/:id/submissions', (req: Request, res: Response) => {
     });
   }
 
-  const newSubmission: TaskSubmission = {
-    id: `sub-${Date.now()}`,
-    taskId: task.id,
-    taskName: task.name,
-    modulePhase: task.modulePhase,
-    submittedByUserId: submittedByUserId || 'unknown',
-    submittedByName: submittedByName || 'Capstone Team Member',
-    enhancements: enhancements.trim(),
-    improvements: improvements.trim(),
-    otherSuggestions: (otherSuggestions || '').trim(),
-    attachmentUrl,
-    attachmentName: attachmentName || 'proof_attachment.png',
-    attachmentType: attachmentType || 'image/png',
-    progressReported: progressReported !== undefined ? Number(progressReported) : task.progress,
-    status: 'Pending Review',
-    submittedAt: new Date().toISOString(),
-  };
+  const existingIndex = db.submissions.findIndex(
+    s => s.taskId === task.id && s.submittedByUserId === submittedByUserId
+  );
 
-  db.submissions.unshift(newSubmission);
+  let finalSubmission: TaskSubmission;
+
+  if (existingIndex !== -1) {
+    // Check if locked by 30-min rule
+    const existing = db.submissions[existingIndex];
+    const elapsed = Date.now() - new Date(existing.submittedAt).getTime();
+    const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+    if (elapsed > THIRTY_MINUTES_MS || existing.isArchived) {
+      return res.status(400).json({
+        success: false,
+        message: '30 minutes have elapsed since submission. This deliverable is archived and cannot be re-submitted.',
+      });
+    }
+
+    db.submissions[existingIndex] = {
+      ...existing,
+      enhancements: enhancements.trim(),
+      improvements: improvements.trim(),
+      otherSuggestions: (otherSuggestions || '').trim(),
+      attachmentUrl,
+      attachmentName: attachmentName || existing.attachmentName || 'proof_attachment.png',
+      attachmentType: attachmentType || existing.attachmentType || 'image/png',
+      progressReported: progressReported !== undefined ? Number(progressReported) : task.progress,
+      status: 'Pending Review',
+    };
+    finalSubmission = db.submissions[existingIndex];
+  } else {
+    finalSubmission = {
+      id: `sub-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      taskId: task.id,
+      taskName: task.name,
+      modulePhase: task.modulePhase,
+      submittedByUserId: submittedByUserId || 'unknown',
+      submittedByName: submittedByName || 'Capstone Team Member',
+      enhancements: enhancements.trim(),
+      improvements: improvements.trim(),
+      otherSuggestions: (otherSuggestions || '').trim(),
+      attachmentUrl,
+      attachmentName: attachmentName || 'proof_attachment.png',
+      attachmentType: attachmentType || 'image/png',
+      progressReported: progressReported !== undefined ? Number(progressReported) : task.progress,
+      status: 'Pending Review',
+      submittedAt: new Date().toISOString(),
+      isArchived: false,
+    };
+    db.submissions.unshift(finalSubmission);
+  }
 
   // Update task progress if provided and higher
   if (progressReported !== undefined && Number(progressReported) > task.progress) {
@@ -691,15 +726,67 @@ app.post('/api/tasks/:id/submissions', (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    submission: newSubmission,
+    submission: finalSubmission,
     task,
     message: 'Progress update, enhancements, and screenshot proof submitted for quality audit.',
   });
 });
 
+// Update / Edit Submission within 30-minute window
+app.put('/api/submissions/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const sub = db.submissions.find(s => s.id === id);
+
+  if (!sub) {
+    return res.status(404).json({ success: false, message: 'Submission not found' });
+  }
+
+  const elapsed = Date.now() - new Date(sub.submittedAt).getTime();
+  const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+  if (elapsed > THIRTY_MINUTES_MS || sub.isArchived) {
+    sub.isArchived = true;
+    saveDb();
+    return res.status(400).json({
+      success: false,
+      message: 'Lumipas na ang 30 minutes! Naka-archive na ang sagot at hindi na pwedeng i-edit.',
+    });
+  }
+
+  const { enhancements, improvements, otherSuggestions, attachmentUrl, attachmentName } = req.body;
+
+  if (enhancements !== undefined) sub.enhancements = enhancements.trim();
+  if (improvements !== undefined) sub.improvements = improvements.trim();
+  if (otherSuggestions !== undefined) sub.otherSuggestions = (otherSuggestions || '').trim();
+  if (attachmentUrl !== undefined && attachmentUrl) sub.attachmentUrl = attachmentUrl;
+  if (attachmentName !== undefined && attachmentName) sub.attachmentName = attachmentName;
+
+  saveDb();
+
+  res.json({ success: true, submission: sub, message: 'Submission updated successfully.' });
+});
+
 // Get Submissions for Audit Hub or Task Detail
 app.get('/api/submissions', (req: Request, res: Response) => {
   const { taskId, userId, status } = req.query;
+  const now = Date.now();
+  const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+  let changed = false;
+
+  db.submissions.forEach(sub => {
+    if (!sub.isArchived) {
+      const elapsed = now - new Date(sub.submittedAt).getTime();
+      if (elapsed >= THIRTY_MINUTES_MS) {
+        sub.isArchived = true;
+        sub.archivedAt = new Date(new Date(sub.submittedAt).getTime() + THIRTY_MINUTES_MS).toISOString();
+        changed = true;
+      }
+    }
+  });
+
+  if (changed) {
+    saveDb();
+  }
+
   let list = db.submissions;
 
   if (taskId) {

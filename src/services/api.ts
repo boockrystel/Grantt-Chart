@@ -384,21 +384,35 @@ export const apiService = {
 
   // Update Task
   async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
+    let serverTask: TaskItem | null = null;
     try {
-      await fetch(`/api/tasks/${id}`, {
+      const res = await fetch(`/api/tasks/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.task) {
+          serverTask = data.task;
+        }
+      }
     } catch {}
 
     const tasks = await this.getTasks();
     const idx = tasks.findIndex(t => t.id === id);
-    if (idx === -1) throw new Error('Task not found');
+    if (idx === -1 && !serverTask) throw new Error('Task not found');
 
-    tasks[idx] = { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };
-    localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
-    return tasks[idx];
+    const updated = serverTask || { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };
+    if (idx !== -1) {
+      tasks[idx] = updated;
+    } else {
+      tasks.push(updated);
+    }
+    try {
+      localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+    } catch {}
+    return updated;
   },
 
   // Delete Task (Admin / Project Leader action)
@@ -469,8 +483,34 @@ export const apiService = {
       throw new Error('Nalampasan na ang 1 day testing window para sa task na ito. Naka-lock na at hindi na masagutan.');
     }
 
+    let serverSub: TaskSubmission | null = null;
+    let serverTask: TaskItem | null = null;
+
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.submission) {
+          serverSub = data.submission;
+          serverTask = data.task || null;
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (errData.message) throw new Error(errData.message);
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('30 minutes') || err.message.includes('required'))) {
+        throw err;
+      }
+      // offline fallback
+    }
+
     const now = new Date();
-    const newSub: TaskSubmission = {
+    const newSub: TaskSubmission = serverSub || {
       id: `sub-${Date.now()}`,
       taskId: task.id,
       taskName: task.name,
@@ -486,22 +526,37 @@ export const apiService = {
       progressReported: submissionData.progressReported,
       status: 'Pending Review',
       submittedAt: now.toISOString(),
-      isArchived: false, // will become archived after 30 mins
+      isArchived: false,
     };
 
     const submissions = await this.getSubmissions();
-    submissions.unshift(newSub);
-    localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(submissions));
-
-    if (submissionData.progressReported > task.progress) {
-      task.progress = submissionData.progressReported;
-      if (task.progress >= 100) task.status = 'In Review';
-      else if (task.progress > 0 && task.status === 'Not Started') task.status = 'In Progress';
-      task.updatedAt = now.toISOString();
-      localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+    const existingIdx = submissions.findIndex(
+      s => s.taskId === taskId && s.submittedByUserId === submissionData.submittedByUserId
+    );
+    if (existingIdx !== -1) {
+      submissions[existingIdx] = newSub;
+    } else {
+      submissions.unshift(newSub);
     }
 
-    return { submission: newSub, task };
+    try {
+      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(submissions));
+    } catch {}
+
+    const updatedTask = serverTask || task;
+    if (!serverTask && submissionData.progressReported > task.progress) {
+      updatedTask.progress = submissionData.progressReported;
+      if (updatedTask.progress >= 100) updatedTask.status = 'In Review';
+      else if (updatedTask.progress > 0 && updatedTask.status === 'Not Started') updatedTask.status = 'In Progress';
+      updatedTask.updatedAt = now.toISOString();
+      const taskIdx = tasks.findIndex(t => t.id === taskId);
+      if (taskIdx !== -1) tasks[taskIdx] = updatedTask;
+      try {
+        localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+      } catch {}
+    }
+
+    return { submission: newSub, task: updatedTask };
   },
 
   // Edit Submission within 30-minute window
@@ -516,6 +571,28 @@ export const apiService = {
       attachmentName?: string;
     }
   ): Promise<TaskSubmission> {
+    let serverSub: TaskSubmission | null = null;
+    try {
+      const res = await fetch(`/api/submissions/${submissionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.submission) {
+          serverSub = data.submission;
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        if (errData.message) throw new Error(errData.message);
+      }
+    } catch (err: any) {
+      if (err.message && (err.message.includes('30 minutes') || err.message.includes('archive'))) {
+        throw err;
+      }
+    }
+
     const subs = await this.getSubmissions();
     const sub = subs.find(s => s.id === submissionId);
     if (!sub) throw new Error('Submission not found');
@@ -523,23 +600,59 @@ export const apiService = {
     const elapsed = Date.now() - new Date(sub.submittedAt).getTime();
     if (elapsed > THIRTY_MINUTES_MS || sub.isArchived) {
       sub.isArchived = true;
-      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
+      try {
+        localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
+      } catch {}
       throw new Error('Lumipas na ang 30 minutes! Naka-archive na ang sagot mo at hindi na pwedeng galawin o i-edit.');
     }
 
-    sub.enhancements = updates.enhancements.trim();
-    sub.improvements = updates.improvements.trim();
-    sub.otherSuggestions = updates.otherSuggestions.trim();
-    if (updates.attachmentUrl) sub.attachmentUrl = updates.attachmentUrl;
-    if (updates.attachmentName) sub.attachmentName = updates.attachmentName;
+    const updated = serverSub || {
+      ...sub,
+      enhancements: updates.enhancements.trim(),
+      improvements: updates.improvements.trim(),
+      otherSuggestions: updates.otherSuggestions.trim(),
+      ...(updates.attachmentUrl ? { attachmentUrl: updates.attachmentUrl } : {}),
+      ...(updates.attachmentName ? { attachmentName: updates.attachmentName } : {}),
+    };
 
-    localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
-    return sub;
+    const idx = subs.findIndex(s => s.id === submissionId);
+    if (idx !== -1) subs[idx] = updated;
+    try {
+      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
+    } catch {}
+
+    return updated;
   },
 
-  // Get Submissions with 30-minute auto-archive check
+  // Get Submissions with real-time server sync & 30-minute auto-archive check
   async getSubmissions(taskId?: string, userId?: string, status?: string): Promise<TaskSubmission[]> {
-    let list: TaskSubmission[] = JSON.parse(localStorage.getItem(STORAGE_SUBMISSIONS) || '[]');
+    try {
+      const url = new URL('/api/submissions', window.location.origin);
+      if (taskId) url.searchParams.set('taskId', taskId);
+      if (userId) url.searchParams.set('userId', userId);
+      if (status) url.searchParams.set('status', status);
+      const res = await fetch(url.toString());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.submissions)) {
+          try {
+            localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(data.submissions));
+          } catch {}
+          return data.submissions;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+
+    let list: TaskSubmission[] = [];
+    try {
+      const local = localStorage.getItem(STORAGE_SUBMISSIONS);
+      list = local ? JSON.parse(local) : INITIAL_SUBMISSIONS;
+    } catch {
+      list = INITIAL_SUBMISSIONS;
+    }
+
     const now = Date.now();
     let changed = false;
 
@@ -560,7 +673,9 @@ export const apiService = {
     });
 
     if (changed) {
-      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(list));
+      try {
+        localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(list));
+      } catch {}
     }
 
     if (taskId) list = list.filter(s => s.taskId === taskId);
@@ -579,36 +694,73 @@ export const apiService = {
       updateTaskToComplete?: boolean;
     }
   ): Promise<TaskSubmission> {
+    let serverSub: TaskSubmission | null = null;
+    try {
+      const res = await fetch(`/api/submissions/${submissionId}/review`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reviewData),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.submission) {
+          serverSub = data.submission;
+        }
+      }
+    } catch {}
+
     const subs = await this.getSubmissions();
     const sub = subs.find(s => s.id === submissionId);
     if (!sub) throw new Error('Submission not found');
 
-    sub.status = reviewData.status;
-    sub.adminFeedback = reviewData.adminFeedback;
-    sub.reviewedBy = reviewData.reviewedBy;
-    sub.reviewedAt = new Date().toISOString();
+    const updated = serverSub || {
+      ...sub,
+      status: reviewData.status,
+      adminFeedback: reviewData.adminFeedback,
+      reviewedBy: reviewData.reviewedBy,
+      reviewedAt: new Date().toISOString(),
+    };
+
+    const idx = subs.findIndex(s => s.id === submissionId);
+    if (idx !== -1) subs[idx] = updated;
+    try {
+      localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
+    } catch {}
 
     if (reviewData.updateTaskToComplete && reviewData.status === 'Approved') {
       const tasks = await this.getTasks();
       const t = tasks.find(task => task.id === sub.taskId);
       if (t) {
-        t.status = 'Completed';
-        t.progress = 100;
-        t.updatedAt = new Date().toISOString();
-        localStorage.setItem(STORAGE_TASKS, JSON.stringify(tasks));
+        await this.updateTask(t.id, {
+          status: 'Completed',
+          progress: 100,
+        });
       }
     }
 
-    localStorage.setItem(STORAGE_SUBMISSIONS, JSON.stringify(subs));
-    return sub;
+    return updated;
   },
 
-  // Admin Task Backlog Matrix
+  // Admin Task Backlog Matrix (Live server calculation with fallback)
   async getBacklogMatrix(): Promise<{
     totalUncompletedTasks: number;
     uncompletedTasks: TaskItem[];
     memberBacklog: MemberBacklogSummary[];
   }> {
+    try {
+      const res = await fetch('/api/admin/backlog-matrix');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.memberBacklog) {
+          return {
+            totalUncompletedTasks: data.totalUncompletedTasks,
+            uncompletedTasks: data.uncompletedTasks,
+            memberBacklog: data.memberBacklog,
+          };
+        }
+      }
+    } catch {}
+
     const users = await this.getUsers();
     const tasks = await this.getTasks();
     const submissions = await this.getSubmissions();
@@ -664,8 +816,18 @@ export const apiService = {
     };
   },
 
-  // Admin Efficiency Leaderboard
+  // Admin Efficiency Leaderboard (Live server calculation with fallback)
   async getEfficiencyRanking(): Promise<EfficiencyLeaderboardItem[]> {
+    try {
+      const res = await fetch('/api/admin/efficiency-ranking');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.ranking)) {
+          return data.ranking;
+        }
+      }
+    } catch {}
+
     const users = await this.getUsers();
     const tasks = await this.getTasks();
     const submissions = await this.getSubmissions();

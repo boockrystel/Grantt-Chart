@@ -1,0 +1,330 @@
+{
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Cabildo, Kathlyn Joyce",
+      "username": "kathlyn.cabildo",
+      "password": "pl_password2026",
+      "role": "Admin",
+      "title": "Project Leader (Admin)",
+      "email": "cabildo.kj@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%23be185d%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKC%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-2",
+      "name": "Almira, Eugene",
+      "username": "eugene.almira",
+      "password": "backend_pass2026",
+      "role": "Member",
+      "title": "Back-end Developer (Member)",
+      "email": "almira.e@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%23831843%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23fbcfe8%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EEA%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-3",
+      "name": "Amponin, John Alexis",
+      "username": "alexis.amponin",
+      "password": "data_pass2026",
+      "role": "Member",
+      "title": "Data Gatherer (Member)",
+      "email": "amponin.ja@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%234c0519%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23f472b6%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EAA%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-4",
+      "name": "Booc, Krystel Kaye",
+      "username": "krystel.booc",
+      "password": "docs_pass2026",
+      "role": "Member",
+      "title": "Head Documentation (Member)",
+      "email": "boockrystel@gmail.com",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%23db2777%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EKB%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-5",
+      "name": "Catubay, Mark Lawrence",
+      "username": "lawrence.catubay",
+      "password": "qa_pass2026",
+      "role": "Member",
+      "title": "Quality Assurance / System Analyst (Member)",
+      "email": "catubay.ml@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%239d174d%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ELC%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-6",
+      "name": "Sunga, Aiman Charmount",
+      "username": "aiman.sunga",
+      "password": "data_pass2026",
+      "role": "Member",
+      "title": "Data Gatherer (Member)",
+      "email": "sunga.ac@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%23701a75%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EAS%3C%2Ftext%3E%3C%2Fsvg%3E"
+    },
+    {
+      "id": "user-7",
+      "name": "Tapales, JohnRic",
+      "username": "johnric.tapales",
+      "password": "data_pass2026",
+      "role": "Member",
+      "title": "Data Gatherer (Member)",
+      "email": "tapales.jr@capstone.edu",
+      "avatar": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%22150%22%20viewBox%3D%220%200%20150%20150%22%3E%3Crect%20width%3D%22150%22%20height%3D%22150%22%20rx%3D%2236%22%20fill%3D%22%23500724%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2254%25%22%20font-family%3D%22system-ui%2C%20-apple-system%2C%20sans-serif%22%20font-size%3D%2252%22%20font-weight%3D%22900%22%20fill%3D%22%23fbcfe8%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3EJT%3C%2Ftext%3E%3C%2Fsvg%3E"
+    }
+  ],
+  "attendance": [
+    {
+      "id": "att-1",
+      "userId": "user-1",
+      "userName": "Cabildo, Kathlyn Joyce",
+      "userRole": "Admin",
+      "date": "2026-10-18",
+      "timestamp": "07:45:12 AM",
+      "ipAddress": "192.168.1.101",
+      "status": "Present",
+      "notes": "PL Session Initiated - Admin Monitoring Active"
+    },
+    {
+      "id": "att-2",
+      "userId": "user-4",
+      "userName": "Booc, Krystel Kaye",
+      "userRole": "Member",
+      "date": "2026-10-18",
+      "timestamp": "08:12:44 AM",
+      "ipAddress": "192.168.1.104",
+      "status": "Present",
+      "notes": "Logged in for Manuscript Chapter 4 Documentation Proof"
+    },
+    {
+      "id": "att-3",
+      "userId": "user-2",
+      "userName": "Almira, Eugene",
+      "userRole": "Member",
+      "date": "2026-10-18",
+      "timestamp": "08:25:30 AM",
+      "ipAddress": "192.168.1.102",
+      "status": "Present",
+      "notes": "Logged in for Database Schema Migration & API refinement"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "taskNumber": 1,
+      "code": "TASK-01",
+      "name": "Task 1: Index",
+      "modulePhase": "Index",
+      "description": "Landing page, public access gateway, university hero showcase, authentication navigation & system information portal.",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-08",
+      "status": "Completed",
+      "progress": 100,
+      "priority": "High",
+      "assigneeIds": [
+        "user-2",
+        "user-4"
+      ],
+      "createdAt": "2026-10-01T08:00:00.000Z",
+      "updatedAt": "2026-10-08T16:30:00.000Z"
+    },
+    {
+      "id": "task-2",
+      "taskNumber": 2,
+      "code": "TASK-02",
+      "name": "Task 2: Dashboard",
+      "modulePhase": "Dashboard",
+      "description": "Interactive real-time analytics hub, project metrics, velocity gauges, student/staff summary widgets & quick actions.",
+      "startDate": "2026-10-06",
+      "dueDate": "2026-10-15",
+      "status": "In Progress",
+      "progress": 75,
+      "priority": "Critical",
+      "assigneeIds": [
+        "user-2",
+        "user-5"
+      ],
+      "createdAt": "2026-10-06T08:00:00.000Z",
+      "updatedAt": "2026-10-14T11:20:00.000Z"
+    },
+    {
+      "id": "task-3",
+      "taskNumber": 3,
+      "code": "TASK-03",
+      "name": "Task 3: Admin",
+      "modulePhase": "Admin",
+      "description": "Role-based access control, system configuration panel, security audit log, member assignment control & approval matrix.",
+      "startDate": "2026-10-12",
+      "dueDate": "2026-10-22",
+      "status": "In Progress",
+      "progress": 40,
+      "priority": "Critical",
+      "assigneeIds": [
+        "user-1",
+        "user-5"
+      ],
+      "createdAt": "2026-10-12T08:00:00.000Z",
+      "updatedAt": "2026-10-16T09:00:00.000Z"
+    },
+    {
+      "id": "task-4",
+      "taskNumber": 4,
+      "code": "TASK-04",
+      "name": "Task 4: Staff",
+      "modulePhase": "Staff",
+      "description": "Staff operational workflows, task intake pipelines, inventory/document verification views & reporting tools.",
+      "startDate": "2026-10-16",
+      "dueDate": "2026-10-26",
+      "status": "Not Started",
+      "progress": 10,
+      "priority": "High",
+      "assigneeIds": [
+        "user-3",
+        "user-6",
+        "user-7"
+      ],
+      "createdAt": "2026-10-16T08:00:00.000Z",
+      "updatedAt": "2026-10-16T08:00:00.000Z"
+    },
+    {
+      "id": "task-5",
+      "taskNumber": 5,
+      "code": "TASK-05",
+      "name": "Task 5: Database & Security",
+      "modulePhase": "Database",
+      "description": "Normalized PostgreSQL schema, Row-Level Security policies, Supabase cloud sync & query optimization indexing.",
+      "startDate": "2026-10-18",
+      "dueDate": "2026-10-29",
+      "status": "In Progress",
+      "progress": 30,
+      "priority": "Critical",
+      "assigneeIds": [
+        "user-2",
+        "user-5"
+      ],
+      "createdAt": "2026-10-16T08:00:00.000Z",
+      "updatedAt": "2026-10-16T08:00:00.000Z"
+    },
+    {
+      "id": "task-6",
+      "taskNumber": 6,
+      "code": "TASK-06",
+      "name": "Task 6: Field Data Gathering & Benchmarking",
+      "modulePhase": "Data Gathering",
+      "description": "Field research interview consolidation, stakeholder surveys, user persona validations & sample data generation.",
+      "startDate": "2026-10-04",
+      "dueDate": "2026-10-18",
+      "status": "In Review",
+      "progress": 85,
+      "priority": "Medium",
+      "assigneeIds": [
+        "user-3",
+        "user-6",
+        "user-7"
+      ],
+      "createdAt": "2026-10-04T08:00:00.000Z",
+      "updatedAt": "2026-10-15T15:00:00.000Z"
+    },
+    {
+      "id": "task-7",
+      "taskNumber": 7,
+      "code": "TASK-07",
+      "name": "Task 7: Capstone Manuscript & Quality Audit",
+      "modulePhase": "Documentation",
+      "description": "Chapter 1 to 5 documentation formatting, system architecture diagrams, user manual & defense presentation deck.",
+      "startDate": "2026-10-10",
+      "dueDate": "2026-10-31",
+      "status": "In Progress",
+      "progress": 60,
+      "priority": "High",
+      "assigneeIds": [
+        "user-4",
+        "user-1"
+      ],
+      "createdAt": "2026-10-10T08:00:00.000Z",
+      "updatedAt": "2026-10-16T14:30:00.000Z"
+    }
+  ],
+  "submissions": [
+    {
+      "id": "sub-1",
+      "taskId": "task-1",
+      "taskName": "Task 1: Index",
+      "modulePhase": "Index",
+      "submittedByUserId": "user-2",
+      "submittedByName": "Almira, Eugene",
+      "enhancements": "Added responsive navbar with university badge, quick portal route transitions, and auto-redirect to active session.",
+      "improvements": "Optimized hero asset loading using WebP format, reduced bundle hydration time from 1.2s to 400ms.",
+      "otherSuggestions": "Recommend enabling dark mode toggle for night research and defense panel viewing.",
+      "attachmentUrl": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+      "attachmentName": "index_module_screenshot.png",
+      "attachmentType": "image/png",
+      "progressReported": 100,
+      "status": "Approved",
+      "adminFeedback": "Excellent UI layout and responsive structure. Approved by PL.",
+      "reviewedBy": "Cabildo, Kathlyn Joyce",
+      "reviewedAt": "2026-10-08T17:00:00.000Z",
+      "submittedAt": "2026-10-08T16:25:00.000Z",
+      "isArchived": true,
+      "archivedAt": "2026-10-08T16:55:00.000Z"
+    },
+    {
+      "id": "sub-2",
+      "taskId": "task-2",
+      "taskName": "Task 2: Dashboard",
+      "modulePhase": "Dashboard",
+      "submittedByUserId": "user-5",
+      "submittedByName": "Catubay, Mark Lawrence",
+      "enhancements": "Integrated real-time progress gauge charts, task backlog cards, and status filter chips.",
+      "improvements": "Refactored state listeners to prevent excessive re-renders during milestone updates.",
+      "otherSuggestions": "We should link the efficiency leaderboard directly to individual task completion points.",
+      "attachmentUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+      "attachmentName": "dashboard_metrics_preview.png",
+      "attachmentType": "image/png",
+      "progressReported": 75,
+      "status": "Approved",
+      "adminFeedback": "Great analytical layout. Ensure accessibility contrast on chart labels.",
+      "reviewedBy": "Cabildo, Kathlyn Joyce",
+      "reviewedAt": "2026-10-14T14:00:00.000Z",
+      "submittedAt": "2026-10-14T11:15:00.000Z",
+      "isArchived": true,
+      "archivedAt": "2026-10-14T11:45:00.000Z"
+    },
+    {
+      "id": "sub-3",
+      "taskId": "task-6",
+      "taskName": "Task 6: Field Data Gathering & Benchmarking",
+      "modulePhase": "Data Gathering",
+      "submittedByUserId": "user-3",
+      "submittedByName": "Amponin, John Alexis",
+      "enhancements": "Gathered 140 validated student survey responses across 3 engineering departments.",
+      "improvements": "Categorized user pain points into 4 high-impact feature clusters for the Staff module.",
+      "otherSuggestions": "Aiman and JohnRic have secondary interview recordings ready for transcription.",
+      "attachmentUrl": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80",
+      "attachmentName": "survey_data_clusters.png",
+      "attachmentType": "image/png",
+      "progressReported": 85,
+      "status": "Pending Review",
+      "submittedAt": "2026-10-15T14:50:00.000Z",
+      "isArchived": true,
+      "archivedAt": "2026-10-15T15:20:00.000Z"
+    },
+    {
+      "id": "sub-4",
+      "taskId": "task-7",
+      "taskName": "Task 7: Capstone Manuscript & Quality Audit",
+      "modulePhase": "Documentation",
+      "submittedByUserId": "user-4",
+      "submittedByName": "Booc, Krystel Kaye",
+      "enhancements": "Compiled Chapter 3 Research Methodology and updated Gantt chart diagram for Chapter 4.",
+      "improvements": "Standardized citation formatting to IEEE/APA and aligned figure captions with rubric guidelines.",
+      "otherSuggestions": "Need final database ERD from Eugene and security summary from Mark Lawrence before binding draft.",
+      "attachmentUrl": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=80",
+      "attachmentName": "manuscript_draft_chapter3.png",
+      "attachmentType": "image/png",
+      "progressReported": 60,
+      "status": "Pending Review",
+      "submittedAt": "2026-10-16T14:10:00.000Z",
+      "isArchived": true,
+      "archivedAt": "2026-10-16T14:40:00.000Z"
+    }
+  ]
+}

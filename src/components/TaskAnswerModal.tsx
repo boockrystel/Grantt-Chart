@@ -160,18 +160,61 @@ export const TaskAnswerModal: React.FC<TaskAnswerModalProps> = ({
     setSuccessMsg('');
   }, [task, userSubmission]);
 
-  // File Upload
+  // File Upload with automatic compression for fast multi-device sync
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setAttachmentName(file.name);
-    setAttachmentType(file.type);
+    setAttachmentType(file.type || 'image/png');
 
     const reader = new FileReader();
     reader.onload = event => {
-      if (event.target?.result) {
-        setAttachmentUrl(event.target.result as string);
+      const src = event.target?.result as string;
+      if (!src) return;
+
+      // If it's an image, compress to max 1280px for instant cross-device sync
+      if (file.type && file.type.startsWith('image/')) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1280;
+          const MAX_HEIGHT = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.82);
+            setAttachmentUrl(compressed);
+            setErrorMsg('');
+          } else {
+            setAttachmentUrl(src);
+            setErrorMsg('');
+          }
+        };
+        img.onerror = () => {
+          setAttachmentUrl(src);
+          setErrorMsg('');
+        };
+        img.src = src;
+      } else {
+        setAttachmentUrl(src);
         setErrorMsg('');
       }
     };
